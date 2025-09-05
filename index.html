@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morpion Anti-Stress by Sandra</title>
+  <style>
+    /* ======= CSS ======= */
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #f9d423, #ff4e50);
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+    header h1 {
+      color: #ff4e50;
+    }
+    nav button {
+      margin: 10px;
+      padding: 12px 25px;
+      border: none;
+      background: #ff4e50;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    nav button:hover {
+      background: #e63e3e;
+    }
+    .hidden {
+      display: none;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 10px;
+      margin: 20px auto;
+      justify-content: center;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: #fff;
+      border: 3px solid #ff4e50;
+      font-size: 2em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .cell:hover {
+      background: #ffe0e0;
+    }
+    footer {
+      margin-top: 40px;
+      padding: 15px;
+      background: #222;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎮 Morpion Anti-Stress by Sandra</h1>
+    <p>Un espace pour rire, se détendre et défier une IA au morpion.</p>
+    <nav>
+      <button onclick="showSection('humour')">😆 Mode Humour</button>
+      <button onclick="showSection('destress')">🧘 Mode Détente</button>
+    </nav>
+  </header>
+
+  <!-- Section humour -->
+  <section id="humour" class="hidden">
+    <h2>😄 Blague du jour</h2>
+    <p id="joke">Clique pour découvrir une blague...</p>
+    <button onclick="tellJoke()">Nouvelle blague</button>
+  </section>
+
+  <!-- Section détente -->
+  <section id="destress" class="hidden">
+    <h2>✨ Morpion Zen ✨</h2>
+    <div id="board"></div>
+    <p id="status">À toi de commencer !</p>
+    <button onclick="resetGame()">🔄 Recommencer</button>
+  </section>
+
+  <footer>
+    <p>© 2025 Morpion Anti-Stress by Sandra – Créé avec ❤️ pour se détendre</p>
+  </footer>
+
+  <script>
+    // ======= JS =======
+    // Gestion des sections
+    function showSection(id) {
+      document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+    }
+
+    // Mode humour
+    const jokes = [
+      "Pourquoi les canards sont-ils toujours à l’heure ? Parce qu’ils sont dans l’étang ! 🦆",
+      "Quel est le comble pour un électricien ? De ne pas être au courant ⚡",
+      "Pourquoi les squelettes ne se battent jamais ? Parce qu’ils n’ont pas les tripes 💀",
+      "Que dit une imprimante quand elle a fini ? J’ai plus de papier 📄",
+      "Pourquoi les plongeurs plongent-ils en arrière ? Parce que sinon ils tombent dans le bateau 🤿"
+    ];
+    function tellJoke() {
+      const joke = jokes[Math.floor(Math.random() * jokes.length)];
+      document.getElementById("joke").innerText = joke;
+    }
+
+    // Mode détente (morpion contre IA)
+    let board = ["", "", "", "", "", "", "", "", ""];
+    let currentPlayer = "X"; // joueur humain
+    let gameActive = true;
+
+    const boardElement = document.getElementById("board");
+    const statusElement = document.getElementById("status");
+
+    function renderBoard() {
+      boardElement.innerHTML = "";
+      board.forEach((cell, i) => {
+        const cellEl = document.createElement("div");
+        cellEl.classList.add("cell");
+        cellEl.innerText = cell;
+        cellEl.addEventListener("click", () => makeMove(i));
+        boardElement.appendChild(cellEl);
+      });
+    }
+
+    function makeMove(index) {
+      if (!gameActive || board[index] !== "") return;
+
+      board[index] = currentPlayer;
+      renderBoard();
+
+      if (checkWinner(currentPlayer)) {
+        statusElement.innerText = `🎉 Joueur ${currentPlayer} a gagné !`;
+        gameActive = false;
+        return;
+      }
+
+      if (!board.includes("")) {
+        statusElement.innerText = "🤝 Match nul !";
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = "O";
+      aiMove();
+    }
+
+    function aiMove() {
+      const emptyCells = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+      const randomMove = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      board[randomMove] = currentPlayer;
+      renderBoard();
+
+      if (checkWinner(currentPlayer)) {
+        statusElement.innerText = `🤖 L'IA (${currentPlayer}) a gagné !`;
+        gameActive = false;
+        return;
+      }
+
+      if (!board.includes("")) {
+        statusElement.innerText = "🤝 Match nul !";
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = "X";
+      statusElement.innerText = "À toi de jouer !";
+    }
+
+    function checkWinner(player) {
+      const winPatterns = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+      ];
+      return winPatterns.some(pattern => 
+        pattern.every(i => board[i] === player)
+      );
+    }
+
+    function resetGame() {
+      board = ["", "", "", "", "", "", "", "", ""];
+      currentPlayer = "X";
+      gameActive = true;
+      statusElement.innerText = "À toi de jouer !";
+      renderBoard();
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
